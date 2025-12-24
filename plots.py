@@ -1,6 +1,9 @@
 import plotly.graph_objects as go
 import numpy as np
+import formulas
 
+
+# ========== Plotly Anchor Analysis  ==========
 def plot_anchor_plotly(layers_df, free_l, bond_l, anchor_elev, angle_deg):
     fig = go.Figure()
     
@@ -70,3 +73,47 @@ def plot_anchor_plotly(layers_df, free_l, bond_l, anchor_elev, angle_deg):
     )
     
     return fig
+
+# ======== Benchmarking Function =========
+
+def plot_granular_benchmark():
+    spt_range = np.linspace(0, 100, 100)
+    bond_vals = [formulas.calculate_sand_bond_strength(x) for x in spt_range]
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=spt_range, y=bond_vals, mode='lines', name='Sand (Linear: 0.005x)', line=dict(color='red', width=3)))
+    fig.update_layout(title='Sand/Granular Soil: SPT vs Bond Strength (Linear)',
+                      xaxis_title='SPT (N)', yaxis_title='Bond Strength (MPa)', template='plotly_white')
+    return fig
+
+def plot_clay_benchmark():
+    spt_range = np.linspace(0.75, 100, 100)
+    bond_vals = [formulas.calculate_clay_bond_strength(x) for x in spt_range]
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=spt_range, y=bond_vals, mode='lines+markers', name='Clay (Piecewise)', line=dict(color='blue', width=3)))
+    fig.update_layout(title='Clay Soil: Piecewise Linear Interpolation (SPT vs Bond Strength)',
+                      xaxis_title='SPT (N)', yaxis_title='Bond Strength (MPa)', template='plotly_white')
+    return fig
+
+def plot_comparison_benchmark(spt_max=100):
+    spt_range = np.linspace(1, spt_max, 200)
+    clay_vals = [formulas.calculate_clay_bond_strength(x) for x in spt_range]
+    sand_vals = [formulas.calculate_sand_bond_strength(x) for x in spt_range]
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=spt_range, y=clay_vals, name='Clay', line=dict(color='blue')))
+    fig.add_trace(go.Scatter(x=spt_range, y=sand_vals, name='Sand', line=dict(color='red')))
+    
+    title = f'Comparison: Clay vs Sand (SPT 1-{spt_max})'
+    fig.update_layout(title=title, xaxis_title='SPT (N)', yaxis_title='Bond Strength (MPa)', template='plotly_white', legend=dict(x=0, y=1))
+    return fig
+
+def get_benchmark_table():
+    spts = [1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100]
+    data = []
+    for s in spts:
+        c = formulas.calculate_clay_bond_strength(s)
+        g = formulas.calculate_sand_bond_strength(s)
+        data.append({"SPT": s, "Clay (MPa)": round(c, 4), "Sand (MPa)": round(g, 4), "Diff": round(g-c, 4)})
+    return data
